@@ -1,0 +1,37 @@
+{
+    "person": {
+        "patient.patient_universal_id": "string",
+        "patient.family_name": "string",
+        "patient.birthdate": "datetime",
+        "patient.sex": "string",
+        "patient.middle_name": "string",
+        "patient.medicalrecord": "string"
+    },
+    "encounter": {
+        "form_id": "string",
+        "provider_id": "string",
+        "location_id": "string",
+        "encounter_datetime": "DateTime"
+    },
+    "obs": [
+        {
+            "name": "MEDICALRECORDOBSERVATION",
+            "code": "",
+            "value": "",
+            "type": "",
+            "obs_datetime": "DATETIME"
+        },
+        {
+            "name": "appearanceofspecimen",
+            "code": "",
+            "value": "",
+            "type": "String"
+        },
+        {
+            "name": "SPUTUMFORACIDBACILLI",
+            "code": "",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
