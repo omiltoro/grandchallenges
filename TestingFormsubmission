@@ -1,0 +1,166 @@
+package com.exampleas.forms;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.auth.AuthenticationException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.BeforeClass;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.app.Activity;
+import android.util.Base64;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+import javax.servlet.http.HttpServletResponse;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+
+
+public class FormActivity extends Activity implements OnClickListener{
+  
+	private final Log log = LogFactory.getLog(FormActivity.class);
+
+    private static final String METHOD_POST = "POST";
+
+    private static String formsubmissionJson;
+
+    private static String encounterJson;
+
+    private static String consultationJson;
+    private EditText value;
+    private Button btn;
+    private ProgressBar pb;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_form);
+		value=(EditText)findViewById(R.id.editText1);
+		btn=(Button)findViewById(R.id.button1);
+		pb=(ProgressBar)findViewById(R.id.progressBar1);
+		pb.setVisibility(View.GONE);
+		btn.setOnClickListener(this);
+	}
+	
+	
+
+    public static void prepare() throws Exception {
+    	
+    	JSONObject formObject = new JSONObject();
+        formObject.put("dataSource", "954b9e59-eba0-4679-afbb-2878580c054d");
+        formObject.put("discriminator", "encounter");
+        JSONObject payload = new JSONObject();
+		JSONObject encounter= new JSONObject();
+		JSONObject person= new JSONObject();
+		JSONArray obs=new JSONArray();
+		JSONObject o = new JSONObject();
+		payload.put("person","person"); // Device type
+		payload.put("encounter","encounter");
+		payload.put("obs",obs);
+		obs.put(o);
+		person.put("person.uuid","269857b6-f0b9-4c93-af4a-f18293679e89");//replace value with this.getString(R.Id)
+		encounter.put("form.uuid","fe9fc58f-d196-46cb-956d-f46445f558d9");
+		encounter.put("encounterType.uuid","bdb58960-4d91-4ca7-a27a-8dabde40ec12");
+		encounter.put("provider.uuid","3c023ab8-82ff-11e2-96ef-f0def12f7061");
+		encounter.put("location.uuid","e1b1d9eb-69a2-4843-bccc-e73e33c70e4c");
+		encounter.put("datetime","2013-06-12 00:00:00");
+		o.put("uuid", "307AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");//obs uuid for SPUTUM FOR ACID FAST BACILLI
+		o.put("type","coded");//coded
+		o.put("value","1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+       
+        formObject.put("payload", payload);
+        formsubmissionJson = formObject.toString();
+    	
+    	
+    }
+
+
+
+
+
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.form, menu);
+		return true;
+	}
+
+
+
+	@Override
+	public void onClick(View v) {
+		
+		
+		// TODO Auto-generated method stub
+		if(value.getText().toString().length()<1){
+			// out of range
+			Toast.makeText(this, "please enter something", Toast.LENGTH_LONG).show();
+			}else{
+			pb.setVisibility(View.VISIBLE);
+			new MyAsyncTask().execute(value.getText().toString());	
+			}
+		
+	}
+	
+	private class MyAsyncTask extends AsyncTask<String, Integer, Double>{
+		 
+@Override
+protected Double doInBackground(String... params) {
+// TODO Auto-generated method stub
+try {
+	postingQueueData();
+} catch (Exception e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}
+return null;
+}
+ 
+protected void onPostExecute(Double result){
+pb.setVisibility(View.GONE);
+Toast.makeText(getApplicationContext(), "command sent", Toast.LENGTH_LONG).show();
+}
+protected void onProgressUpdate(Integer... progress){
+pb.setProgress(progress[0]);
+}
+ 
+
+}
+	public void postingQueueData() throws Exception {
+        URL url = new URL("http://192.168.1.5:8081/openmrs-standalone/ws/rest/v1/muzima/queueData");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        String encodedAuthorization = "Basic " + Base64.encodeToString("admin:test".getBytes(), Base64.NO_WRAP);
+       // Base64.encode("admin:test".getBytes());
+      //  String encoding = Base64.encodeToString(AuthenticationException.getBytes(), Base64.NO_WRAP);
+        connection.setRequestProperty("Authorization", encodedAuthorization);
+        connection.setRequestMethod(METHOD_POST);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
+
+        OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+        writer.write(formsubmissionJson);
+        writer.flush();
+
+        InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+        int responseCode = reader.read();
+        if (responseCode == HttpServletResponse.SC_OK
+                || responseCode == HttpServletResponse.SC_CREATED) {
+            log.info("Queue data created!");
+        }
+
+        reader.close();
+        writer.close();
+    }
+
+}
+
+
